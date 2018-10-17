@@ -15,7 +15,7 @@ var feedbackMs = 2000;
 var noRptsWithin = 2;
 var gamify = true;
 
-// Use the addMix() function to generate stimuli.
+// Use the addStimuli() function to generate stimuli.
 // It takes 2 arguments, the proportion of congruent stimuli
 // and the number of stimuli to generate. It returns 2 arrays,
 // "shuffledOrRand" and "derived." The first is an array of
@@ -26,10 +26,10 @@ var gamify = true;
 // in "shuffledOrRand", with order randomized and the proportions
 // determined by the first input to the getMixed function.
 
-var colours = [], words = []; // Global variables that addMix() pushed onto
-addMix(1,8,noRptsWithin);
-addMix(0,8,noRptsWithin);
-addMix(0.5,8,noRptsWithin);
+var colours = [], words = []; // Global variables that addStimuli() pushed onto
+addStimuli(1,8,noRptsWithin);
+addStimuli(0,8,noRptsWithin);
+addStimuli(0.5,8,noRptsWithin);
 var masterWords = words;
 var masterColours = colours;
 var practiceWords = ["Red","Yellow","Blue","Green"];
@@ -65,8 +65,8 @@ var addPointsTimeIncr = 16.67; // Roughly screen rate
 
 var cIdx;
 
-if(useScreenButtons){
-    for(cIdx = 0; cIdx < colourNames.length; cIdx++){
+if (useScreenButtons) {
+    for (cIdx = 0; cIdx < colourNames.length; cIdx++) {
         var button = document.createElement("button");
         button.className = "colourButton";
         button.innerHTML = colourNames[cIdx];
@@ -270,11 +270,11 @@ function addPoints(){
     }
 }
 
-function addMix(congruentPpn,nTrials,noRptsWithin){
+function addStimuli(congruentPpn, nTrials, noRptsWithin) {
 	var isCongruent = Array(Math.floor(nTrials*congruentPpn)).fill(true).concat(Array(Math.ceil(nTrials*(1-congruentPpn))).fill(false));
 	isCongruent = sample(isCongruent,isCongruent.length,false);
 	var i, usableColours, usableWords, currWord, currColour;
-	for(i = 0; i < isCongruent.length; i++){
+	for(i = 0; i < isCongruent.length; i++) {
 		if(isCongruent[i]){
 			usableColours = colourNames.filter(x => !words.slice(Math.max(0,words.length-noRptsWithin+1)).includes(x) &&
 													!colours.slice(Math.max(0,colours.length-noRptsWithin+1)).includes(x))
