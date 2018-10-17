@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body>
+<!--<p class="bigBr">.</p>-->
+<p id='scoreArea'>Score: 0</p>
+<canvas id='scoreBar' height="100vh" width="10vw"></canvas>
+<center>
+<div id="dialogArea">
+<!-- If using screen buttons -->
+<!--
+<p class="dialog">You will see a series of words.</p>
+                  Select the colour the word is written in<br>
+                  (not necessarily the word itself).z<br>
+                  You will get points for speed and accuracy.</p>
+-->
+
+<!-- If using keyboard buttons -->
+<p class="dialog">You will see a series of words.<br>
+                  Select the colour the word is written in<br>
+                  (not necessarily the word itself)<br>
+                  by pressing:</p>
+                  <p class='dialog' align='left' style='position:relative; left:30%;'>
+                  &#8226 "r" for "red"<br>
+                  &#8226 "g" for "green"<br>
+                  &#8226 "b" for "blue"<br>
+                  &#8226 "y" for "yellow"<br>
+                  </p>
+                  <p class='dialog'>You will get points for speed and accuracy.</p>
+<button onclick="startPractice()">Start practice</button>
+</div>
+<div id='centeredArea'>
+<p id="textArea", class="stim"></p>
+<div id="buttonArea" style="display: none">
+<p class="stim", style="visibility: hidden">.</p>
+</div>
+</div>
+</center>
+<script src="../commonFunctions.js"></script>
+<script src="run.js"></script>
+</body>
+</html>
