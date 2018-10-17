@@ -1,11 +1,10 @@
 <?php
-$pID = $_POST["pID"];
 $filename = $_POST["filename"];
 $filename = preg_replace('/[^a-z0-9\.]/', '', strtolower($filename));
-$filename = "Data/" . $filename . '.' . uniqid();
+$filename = $filename . '.' . uniqid() . ".txt";
 $txt = $_POST["txt"];
 $DataArray = explode(',', $txt);
-$myfile = fopen($filename.".txt", "w") or die("Unable to open file!");
+$myfile = fopen($filename, "w") or die("Unable to open file!");
 $Ct = 0;
 for ($i = 0; $i < count($DataArray); $i++) {
 	$curr = $DataArray[$i];

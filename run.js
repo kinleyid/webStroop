@@ -9,9 +9,14 @@ var correspondingKeys = ["KeyR","KeyB","KeyY","KeyG"];
 // var nFixationCrossFrames = 120;
 var fixationMs = 2000;
 // var nFeedbackFrames = 120;
-var feedbackMs = 2000;
 var noRptsWithin = 2;
 var gamify = true;
+if (gamify) {
+    var feedbackMs = 2000;   
+} else {
+    var interTrialMs = 2000;
+}
+var isPractice = true; // Set to false to eliminate practice round
 
 // Use the addStimuli() function to generate stimuli.
 // It takes 2 arguments, the proportion of congruent stimuli
@@ -25,19 +30,17 @@ var gamify = true;
 // determined by the first input to the getMixed function.
 
 var colours = [], words = []; // Global variables that addStimuli() pushed onto
-addStimuli(1,8,noRptsWithin);
-addStimuli(0,8,noRptsWithin);
-addStimuli(0.5,8,noRptsWithin);
+addStimuli(1, 8, noRptsWithin);
+addStimuli(0, 8, noRptsWithin);
+addStimuli(0.5, 8, noRptsWithin);
 var masterWords = words;
 var masterColours = colours;
-var practiceWords = ["Red","Yellow","Blue","Green"];
-var practiceColours = ["Red","Blue","Yellow","Green"];
+var practiceWords = ["Red", "Yellow", "Blue", "Green"];
+var practiceColours = ["Red", "Blue", "Yellow", "Green"];
 
 var presented;
 var selection;
 var presentationTime;
-
-var isPractice = true;
 var trialCount;
 var outputText = "Trial,Word,Colour,Selection,PresentationTime,ResponseTime,NewLine,";
 
@@ -162,30 +165,24 @@ function respondToInput(inputEvent){
 				  selection + "," +
                   presentationTime + "," +
                   inputEvent.timeStamp + ",NewLine,";
-	trialCount++;
     interTrialControlFcn();
 }
 
-function interTrialControlFcn() { // All the ugliness in one place
-    if (isPractice) {
-        if (trialCount == words.length) {
+function interTrialControlFcn() {
+    trialCount++;
+    if (trialCount == words.length) {
+        if (isPractice) {
             feedbackScreen(afterPracticeScreen);
+        } else if (gamify) {
+            feedbackScreen(saveData);
         } else {
-            feedbackScreen(runTrial);
+            setTimeout(runTrial, interTrialMs);
         }
     } else {
-        if (gamify) {
-            if (trialCount == words.length) {
-                feedbackScreen(saveData);
-            } else {
-                feedbackScreen(runTrial);
-            }
+        if (isPractice || gamify) {
+            feedbackScreen(runTrial);
         } else {
-            if (trialCount == words.length) {
-                saveData();
-            } else {
-                runTrial();
-            }
+            setTimeout(runTrial, interTrialMs);
         }
     }
 }
@@ -209,8 +206,8 @@ function feedbackScreen(nextFunction) {
             ALL.style.cursor = 'default';
             trialCount--; // Re-do this trial
             var instructions = document.createElement('p');
-            instructions.className = 'dialog'
-            instructions.textContent = "Pick the colour the word is written in."
+            instructions.className = 'dialog';
+            instructions.textContent = 'Pick the colour the word is written in.';
             dialogArea.appendChild(instructions);
             var tryAgainButton = document.createElement('button');
             tryAgainButton.textContent = 'Try again';
@@ -229,11 +226,27 @@ function addPoints(nextFunction){
         setTimeout(
             function() {
                 addPoints(nextFunction)
-            }, addPointsTimeIncr
+            },
+            addPointsTimeIncr
         );
     } else {
         setTimeout(nextFunction, feedbackMs);
     }
+}
+
+function saveData(){
+    xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (xhttp.status == 200) {
+            window.location.href = 'end.html?pID=' + pID;
+        } else if(xhttp.status == 500){
+            saveData();
+        }
+    };
+    xhttp.open("POST", "saveData.php", true);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    VarsToSend = "filename="+filename + "&txt="+outputText;
+    xhttp.send(VarsToSend);
 }
 
 function addStimuli(congruentPpn, nTrials, noRptsWithin) {
