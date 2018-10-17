@@ -8,8 +8,10 @@ var useKeyboard = true;
 var colourNames = ["Red","Blue","Yellow","Green"];
 var correspondingColours = ["red","blue","yellow","green"];
 var correspondingKeys = ["KeyR","KeyB","KeyY","KeyG"];
-var nFixationCrossFrames = 120;
-var nFeedbackFrames = 120;
+// var nFixationCrossFrames = 120;
+var fixationMs = 2000;
+// var nFeedbackFrames = 120;
+var feedbackMs = 2000;
 var noRptsWithin = 2;
 var gamify = true;
 
@@ -94,7 +96,7 @@ function startPractice(){
 	dialogArea.style.display = "none";
 	textArea.style.display = "block";
 	fixationCross();
-	window.requestAnimationFrame(function(){wait(nFixationCrossFrames,showWord)});
+    setTimeout(showWord, fixationMs);
 }
 
 function intermediaryScreen(){
@@ -120,7 +122,7 @@ function startTask(){
 	dialogArea.style.display = "none";
 	textArea.style.display = "block";
 	fixationCross();
-	wait(nFixationCrossFrames,showWord);
+	setTimeout(fixationMs, showWord);
 }
 
 function fixationCross(){
@@ -134,7 +136,6 @@ function showWord(){
 	textArea.innerHTML = words[trialCount];
     if(gamify){
         currPoints = maxPoints;
-        // stopId = window.requestAnimationFrame(showPointsBar);
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
 }
@@ -145,7 +146,6 @@ function showPointsBar(){
         scoreCtx.fillStyle = "rgb(" + 255*(maxPoints-currPoints)/maxPoints + "," + 255*currPoints/maxPoints + ",0)";
         scoreCtx.fillRect(20,screen.height/4+screen.height/2*(1-currPoints/maxPoints),20,currPoints/maxPoints*screen.height/2);
         currPoints--;
-        // stopId = window.requestAnimationFrame(showPointsBar);
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
 }
@@ -188,32 +188,32 @@ function moveOn(e){
 	if(trialCount == words.length){
 		if(isPractice){
 			if(gamify){
-				window.requestAnimationFrame(feedbackScreen);
+				feedbackScreen();
 			} else {
 				intermediaryScreen();
 			}
 		} else {
             if(gamify){
-				window.requestAnimationFrame(feedbackScreen);
+				feedbackScreen();
 			} else {
 				fixationCross();
-                window.requestAnimationFrame(function(){wait(nFixationCrossFrames,showWord)});
+                setTimeout(showWord, fixationMs);
 			}
 		}
 		return;
 	}
 	if(gamify){
-		window.requestAnimationFrame(feedbackScreen);
+        feedbackScreen();
 	} else {
 		fixationCross();
-		window.requestAnimationFrame(function(){wait(nFixationCrossFrames,showWord)});
+        setTimeout(showWord, fixationMs);
 	}
 }
 
 function feedbackScreen(){ // gamify = true is implicit
 	if(selection == colours[trialCount-1]){
 		textArea.innerHTML = "Correct!";
-        window.requestAnimationFrame(addPoints)
+        addPoints();
 	} else {
 		textArea.innerHTML = "Incorrect";
         if(isPractice){
@@ -225,27 +225,24 @@ function feedbackScreen(){ // gamify = true is implicit
         }
         if(trialCount == words.length){
             if(isPractice){
-                window.requestAnimationFrame(function(){wait(nFeedbackFrames,intermediaryScreen)});
+                intermediaryScreen();
             } else {
                 saveData();
             }
         } else {
-            window.requestAnimationFrame(function(){
-                wait(nFeedbackFrames,function(){
-                    fixationCross();
-                    window.requestAnimationFrame(function(){wait(nFixationCrossFrames,showWord)})})});
+            fixationCross();
+            setTimeout(showWord, fixationMs);
         }
 	}
 }
 
 nextWordOrFinishPractice = function(){
     if(trialCount == words.length){
-        window.requestAnimationFrame(function(){wait(nFeedbackFrames,intermediaryScreen)});
+        intermediaryScreen();
     } else {
-        window.requestAnimationFrame(function(){
-                ALL.style.cursor = 'none';
-                fixationCross();
-                window.requestAnimationFrame(function(){wait(nFixationCrossFrames,showWord)})});
+        ALL.style.cursor = 'none';
+        fixationCross();
+        setTimeout(showWord, fixationMs);
     }
 }
 
@@ -253,24 +250,23 @@ function addPoints(){
     if(currPoints > 0){
         score++;
         scoreArea.innerHTML = "Score: " + score;
-        // window.requestAnimationFrame(addPoints);
         setTimeout(addPoints,addPointsTimeIncr);
         currPoints--;
-    } else {//oof
-        window.requestAnimationFrame(function(){
-            wait(nFeedbackFrames,function(){
+    } else {
+        setTimeout(
+            function(){
                 if(trialCount == words.length){
                     if(isPractice){
-                        window.requestAnimationFrame(intermediaryScreen);
+                        intermediaryScreen();
                     } else {
                         saveData();
                     }
                 } else {
                     fixationCross();
-                    window.requestAnimationFrame(function(){
-                        wait(nFixationCrossFrames,showWord)})
+                    setTimeout(showWord, fixationMs);
                 }
-                })});
+            }, feedbackMs
+        );
     }
 }
 
