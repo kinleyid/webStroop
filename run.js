@@ -1,43 +1,4 @@
 
-var decoded = decodeURIComponent(window.location.search);
-var pID = decoded.substring(decoded.indexOf('=')+1);
-var filename = pID + "Stroop";
-
-var colourNames = ["Red","Blue","Yellow","Green"];
-var correspondingColours = ["red","blue","yellow","green"];
-var correspondingKeys = ["KeyR","KeyB","KeyY","KeyG"];
-// var nFixationCrossFrames = 120;
-var fixationMs = 2000;
-// var nFeedbackFrames = 120;
-var noRptsWithin = 2;
-var gamify = true;
-if (gamify) {
-    var feedbackMs = 2000;   
-} else {
-    var interTrialMs = 2000;
-}
-var isPractice = true; // Set to false to eliminate practice round
-
-// Use the addStimuli() function to generate stimuli.
-// It takes 2 arguments, the proportion of congruent stimuli
-// and the number of stimuli to generate. It returns 2 arrays,
-// "shuffledOrRand" and "derived." The first is an array of
-// colour names with each colour represented equally if the
-// number of stimuli is a multiple of the number of colours
-// (otherwise it's just random. "derived" is an array of
-// colour names that either match or don't match the entries
-// in "shuffledOrRand", with order randomized and the proportions
-// determined by the first input to the getMixed function.
-
-var colours = [], words = []; // Global variables that addStimuli() pushed onto
-addStimuli(1, 8, noRptsWithin);
-addStimuli(0, 8, noRptsWithin);
-addStimuli(0.5, 8, noRptsWithin);
-var masterWords = words;
-var masterColours = colours;
-var practiceWords = ["Red", "Yellow", "Blue", "Green"];
-var practiceColours = ["Red", "Blue", "Yellow", "Green"];
-
 var presented;
 var selection;
 var presentationTime;
@@ -118,7 +79,7 @@ function showWord(){
 	textArea.style.color = correspondingColours[colourNames.indexOf(colours[trialCount])];
 	textArea.textContent = words[trialCount];
     presented = true;
-    if(gamify){
+    if (gamify) {
         currPoints = maxPoints;
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
@@ -176,12 +137,14 @@ function interTrialControlFcn() {
         } else if (gamify) {
             feedbackScreen(saveData);
         } else {
+            textArea.style.display = 'none';
             setTimeout(runTrial, interTrialMs);
         }
     } else {
         if (isPractice || gamify) {
             feedbackScreen(runTrial);
         } else {
+            textArea.style.display = 'none';
             setTimeout(runTrial, interTrialMs);
         }
     }
@@ -195,14 +158,14 @@ function feedbackScreen(nextFunction) {
     dialogArea.style.display = 'block';
     var feedback = document.createElement('p');
     feedback.className = 'dialog';
-	if(selection == colours[trialCount-1]){
+	if (selection == colours[trialCount-1]) {
         feedback.textContent = 'Correct!';
         dialogArea.appendChild(feedback);
         addPoints(nextFunction);
 	} else {
         feedback.textContent = 'Incorrect.';
         dialogArea.appendChild(feedback);
-        if(isPractice){
+        if (isPractice) {
             ALL.style.cursor = 'default';
             trialCount--; // Re-do this trial
             var instructions = document.createElement('p');
@@ -220,7 +183,7 @@ function feedbackScreen(nextFunction) {
 }
 
 function addPoints(nextFunction){
-    if(currPoints > 0){
+    if (currPoints > 0) {
         currPoints--;
         scoreArea.textContent = "Score: " + score++;
         setTimeout(
@@ -253,8 +216,8 @@ function addStimuli(congruentPpn, nTrials, noRptsWithin) {
 	var isCongruent = Array(Math.floor(nTrials*congruentPpn)).fill(true).concat(Array(Math.ceil(nTrials*(1-congruentPpn))).fill(false));
 	isCongruent = sample(isCongruent,isCongruent.length,false);
 	var i, usableColours, usableWords, currWord, currColour;
-	for(i = 0; i < isCongruent.length; i++) {
-		if(isCongruent[i]){
+	for (i = 0; i < isCongruent.length; i++) {
+		if (isCongruent[i]) {
 			usableColours = colourNames.filter(x => !words.slice(Math.max(0,words.length-noRptsWithin+1)).includes(x) &&
 													!colours.slice(Math.max(0,colours.length-noRptsWithin+1)).includes(x))
 			currColour = sample(usableColours,1,true)[0];
@@ -274,10 +237,10 @@ function addStimuli(congruentPpn, nTrials, noRptsWithin) {
 function sample(inArray,nSamples,replacement){
 	sampleArray = inArray.slice(0);
 	var i, idx, outArray = [];
-	for(i = 0; i < nSamples; i++){
+	for (i = 0; i < nSamples; i++) {
 		idx = Math.floor(Math.random()*sampleArray.length);
 		outArray.push(sampleArray[idx]);
-		if(!replacement){
+		if (!replacement) {
 			sampleArray.splice(idx,1);
 		}
 	}
