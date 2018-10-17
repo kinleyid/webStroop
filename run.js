@@ -3,9 +3,7 @@ var filename;
 var colourNames = ["Red","Blue","Yellow","Green"];
 var correspondingColours = ["red","blue","yellow","green"];
 var correspondingKeys = ["KeyR","KeyB","KeyY","KeyG"];
-// var nFixationCrossFrames = 120;
 var fixationMs = 2000;
-// var nFeedbackFrames = 120;
 var noRptsWithin = 2;
 var gamify = true;
 if (gamify) {
@@ -114,6 +112,7 @@ function showWord(){
     presented = true;
     if (gamify) {
         currPoints = maxPoints;
+        scoreBar.style.display = 'block';
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
     presentationTime = performance.now();
@@ -150,7 +149,7 @@ function respondToInput(inputEvent){
     }
     if(gamify){
         scoreCtx.clearRect(0,0,scoreCtx.canvas.width,scoreCtx.canvas.height);
-        // window.cancelAnimationFrame(stopId);
+        scoreBar.style.display = 'none';
         clearTimeout(pointsBarStopId);
     }
 	outputText += (isPractice? 0 : trialCount + 1) + "," +
