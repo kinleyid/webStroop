@@ -3,8 +3,6 @@ var decoded = decodeURIComponent(window.location.search);
 var pID = decoded.substring(decoded.indexOf('=')+1);
 var filename = pID + "Stroop";
 
-var useScreenButtons = false;
-var useKeyboard = true;
 var colourNames = ["Red","Blue","Yellow","Green"];
 var correspondingColours = ["red","blue","yellow","green"];
 var correspondingKeys = ["KeyR","KeyB","KeyY","KeyG"];
@@ -38,8 +36,6 @@ var practiceColours = ["Red","Blue","Yellow","Green"];
 var presented;
 var selection;
 var presentationTime;
-var responseTime;
-var reactionTime;
 
 var isPractice = true;
 var trialCount;
@@ -47,97 +43,91 @@ var outputText = "Trial,Word,Colour,Selection,PresentationTime,ResponseTime,NewL
 
 var ALL = document.getElementsByTagName("html")[0];
 var dialogArea = document.getElementById("dialogArea");
+var centeredArea = document.getElementById("centeredArea");
 var textArea = document.getElementById("textArea");
-var buttonArea = document.getElementById("buttonArea");
 var scoreBar = document.getElementById("scoreBar");
 var scoreCtx = scoreBar.getContext('2d');
 scoreCtx.canvas.width = 41;
 scoreCtx.canvas.height = window.innerHeight;
-// var stopId;
 var pointsBarStopId;
 var score = 0;
 var scoreArea = document.getElementById("scoreArea");
 
 
 var maxPoints = 100, currPoints;
-var pointsBarTimeIncr = 16.67; // Roughly screen rate
-var addPointsTimeIncr = 16.67; // Roughly screen rate
+var pointsBarTimeIncr = 1000/60; // Roughly screen rate
+var addPointsTimeIncr = 1000/60; // Roughly screen rate
 
 var cIdx;
 
-if (useScreenButtons) {
-    for (cIdx = 0; cIdx < colourNames.length; cIdx++) {
-        var button = document.createElement("button");
-        button.className = "colourButton";
-        button.innerHTML = colourNames[cIdx];
-        button.onclick = function(e) {moveOn(e)};
-        document.getElementById("buttonArea").appendChild(button);
-    }
-}
-    
-var mutationObserver = new MutationObserver(function() {
-	presentationTime = performance.now();
-    if(colourNames.includes(textArea.innerHTML)){
-        presented = true;
-    }
-});
+window.onkeydown = respondToInput;
 
-mutationObserver.observe(document.getElementById("textArea"), {
-	childList: true
-});
-
-window.onkeydown = moveOn;
-
-function startPractice(){
+function start() {
     trialCount = 0;
+    if (gamify) {
+        score = 0;
+    }
+    if (isPractice) {
+        words = practiceWords;
+        colours = practiceColours;
+    } else {
+        words = masterWords;
+        colours = masterColours;
+    }
     ALL.style.cursor = "none";
-	words = practiceWords;
-	colours = practiceColours;
-	dialogArea.style.display = "none";
+    dialogArea.style.display = "none";
 	textArea.style.display = "block";
-	fixationCross();
+    fixationCross();
     setTimeout(showWord, fixationMs);
 }
 
-function intermediaryScreen(){
-    score = 0;
-    scoreArea.innerHTML = "Score: " + score;
+function afterPracticeScreen(){
+    if (gamify) {
+        score = 0;
+        scoreArea.textContent = "Score: " + score;
+    }
     ALL.style.cursor = "default";
-	dialogArea.style.display = "block";
+    while (dialogArea.lastChild) {
+        dialogArea.removeChild(dialogArea.lastChild);
+    }
+    var dialog1 = document.createElement('p');
+    dialog1.className = 'dialog';
+    dialog1.textContent = 'That was the end of the practice round.';
+    var dialog2 = document.createElement('p');
+    dialog2.className = 'dialog';
+    dialog2.textContent = 'Click to start the game for real.';
+    var startButton = document.createElement('button');
+    startButton.textContent = 'Start game';
+    startButton.onclick = start;
+    dialogArea.appendChild(dialog1);
+    dialogArea.appendChild(dialog2);
+    dialogArea.appendChild(startButton);
+    dialogArea.style.display = "block";
 	textArea.style.display = "none";
-	buttonArea.style.display = "none";
-	dialogArea.innerHTML = "<p class='dialog'>That was the end of the practice round.</br>\
-                                              Click to start the game for real.</p>\
-                                              <button onclick='startTask()'>Start game</button>"
-}
-
-function startTask(){
-    trialCount = 0;
-    ALL.style.cursor = "none";
-    score = 0;
-    scoreArea.innerHTML = "Score: " + score;
-	words = masterWords;
-	colours = masterColours;
-	isPractice = false;	
-	dialogArea.style.display = "none";
-	textArea.style.display = "block";
-	fixationCross();
-	setTimeout(fixationMs, showWord);
 }
 
 function fixationCross(){
 	textArea.style.color = "#000000";
-	textArea.innerHTML = "\u2022";
+	textArea.textContent = "\u2022";
 }
 
 function showWord(){
-	buttonArea.style.display = "block";
 	textArea.style.color = correspondingColours[colourNames.indexOf(colours[trialCount])];
-	textArea.innerHTML = words[trialCount];
+	textArea.textContent = words[trialCount];
+    presented = true;
     if(gamify){
         currPoints = maxPoints;
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
+    presentationTime = performance.now();
+}
+
+function runTrial() {
+    ALL.style.cursor = 'none';
+    dialogArea.style.display = 'none';
+    textArea.style.display = 'block';
+    fixationCross();
+    setTimeout(showWord, fixationMs);
 }
 
 function showPointsBar(){
@@ -150,123 +140,99 @@ function showPointsBar(){
     }
 }
 
-function moveOn(e){
+function respondToInput(inputEvent){
     if(!presented){
         return;
-    }
-    if(e.code){ //KeyPress
-        if(useKeyboard){
-            if(correspondingKeys.includes(e.code)){
-                selection = colourNames[correspondingKeys.indexOf(e.code)];
-            } else {
-                return; // Didn't select one of the designated keys
-            }
-        } else {
-            return;
-        }
-    } else if(e.target.className == 'colourButton'){ // Screen button
-        // useScreenButtons is implicitly true
-        selection = e.target.innerHTML;
     } else {
-        return;
+        presented = false;
+        if(correspondingKeys.includes(inputEvent.code)){
+            selection = colourNames[correspondingKeys.indexOf(inputEvent.code)];
+        } else {
+            return; // Didn't select one of the designated keys
+        }
     }
-    presented = false;
     if(gamify){
         scoreCtx.clearRect(0,0,scoreCtx.canvas.width,scoreCtx.canvas.height);
         // window.cancelAnimationFrame(stopId);
         clearTimeout(pointsBarStopId);
     }
-	responseTime = e.timeStamp;
 	outputText += (isPractice? 0 : trialCount + 1) + "," +
                   words[trialCount] + "," +
 				  colours[trialCount] + "," +
 				  selection + "," +
                   presentationTime + "," +
-                  responseTime + ",NewLine,";
+                  inputEvent.timeStamp + ",NewLine,";
 	trialCount++;
-	buttonArea.style.display = "none";
-	if(trialCount == words.length){
-		if(isPractice){
-			if(gamify){
-				feedbackScreen();
-			} else {
-				intermediaryScreen();
-			}
-		} else {
-            if(gamify){
-				feedbackScreen();
-			} else {
-				fixationCross();
-                setTimeout(showWord, fixationMs);
-			}
-		}
-		return;
-	}
-	if(gamify){
-        feedbackScreen();
-	} else {
-		fixationCross();
-        setTimeout(showWord, fixationMs);
-	}
+    interTrialControlFcn();
 }
 
-function feedbackScreen(){ // gamify = true is implicit
-	if(selection == colours[trialCount-1]){
-		textArea.innerHTML = "Correct!";
-        addPoints();
-	} else {
-		textArea.innerHTML = "Incorrect";
-        if(isPractice){
-            ALL.style.cursor = 'default';
-            trialCount--; // Re-do this trial
-            textArea.innerHTML += ".<br/>Pick the colour the word is written in.";
-            textArea.innerHTML += "<button onclick='nextWordOrFinishPractice()'>Try again</button>";
-            return;
+function interTrialControlFcn() { // All the ugliness in one place
+    if (isPractice) {
+        if (trialCount == words.length) {
+            feedbackScreen(afterPracticeScreen);
+        } else {
+            feedbackScreen(runTrial);
         }
-        if(trialCount == words.length){
-            if(isPractice){
-                intermediaryScreen();
+    } else {
+        if (gamify) {
+            if (trialCount == words.length) {
+                feedbackScreen(saveData);
             } else {
-                saveData();
+                feedbackScreen(runTrial);
             }
         } else {
-            fixationCross();
-            setTimeout(showWord, fixationMs);
+            if (trialCount == words.length) {
+                saveData();
+            } else {
+                runTrial();
+            }
         }
-	}
-}
-
-nextWordOrFinishPractice = function(){
-    if(trialCount == words.length){
-        intermediaryScreen();
-    } else {
-        ALL.style.cursor = 'none';
-        fixationCross();
-        setTimeout(showWord, fixationMs);
     }
 }
 
-function addPoints(){
+function feedbackScreen(nextFunction) {
+    while (dialogArea.lastChild) {
+        dialogArea.removeChild(dialogArea.lastChild);
+    }
+    textArea.style.display = 'none';
+    dialogArea.style.display = 'block';
+    var feedback = document.createElement('p');
+    feedback.className = 'dialog';
+	if(selection == colours[trialCount-1]){
+        feedback.textContent = 'Correct!';
+        dialogArea.appendChild(feedback);
+        addPoints(nextFunction);
+	} else {
+        feedback.textContent = 'Incorrect.';
+        dialogArea.appendChild(feedback);
+        if(isPractice){
+            ALL.style.cursor = 'default';
+            trialCount--; // Re-do this trial
+            var instructions = document.createElement('p');
+            instructions.className = 'dialog'
+            instructions.textContent = "Pick the colour the word is written in."
+            dialogArea.appendChild(instructions);
+            var tryAgainButton = document.createElement('button');
+            tryAgainButton.textContent = 'Try again';
+            tryAgainButton.onclick = runTrial;
+            dialogArea.appendChild(tryAgainButton);
+            return;
+        }
+        setTimeout(nextFunction, feedbackMs);
+	}
+}
+
+function addPoints(nextFunction){
     if(currPoints > 0){
-        score++;
-        scoreArea.innerHTML = "Score: " + score;
-        setTimeout(addPoints,addPointsTimeIncr);
         currPoints--;
-    } else {
+        scoreArea.textContent = "Score: " + score++;
         setTimeout(
-            function(){
-                if(trialCount == words.length){
-                    if(isPractice){
-                        intermediaryScreen();
-                    } else {
-                        saveData();
-                    }
-                } else {
-                    fixationCross();
-                    setTimeout(showWord, fixationMs);
-                }
-            }, feedbackMs
+            function() {
+                addPoints(nextFunction)
+            }, addPointsTimeIncr
         );
+    } else {
+        setTimeout(nextFunction, feedbackMs);
     }
 }
 
