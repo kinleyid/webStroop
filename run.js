@@ -1,14 +1,15 @@
 
-var filename;
+var filename; // Your code to get the filename goes here
 var colourNames = ["Red","Blue","Yellow","Green"];
 var correspondingColours = ["red","blue","yellow","green"];
 var correspondingKeys = ["KeyR","KeyB","KeyY","KeyG"];
-var fixationMs = 2000;
 var noRptsWithin = 2;
 var gamify = true;
-if (gamify) {
-    var feedbackMs = 2000;   
-} else {
+var preFixationMs = 2000;
+var fixationMs = 2000;
+var feedbackMs = 2000; // Feedback is given during practice no matter what
+var postFeedbackMs = 2000;
+if (!gamify) {
     var interTrialMs = 2000;
 }
 var isPractice = true; // Set to false to eliminate practice round
@@ -18,8 +19,10 @@ var isPractice = true; // Set to false to eliminate practice round
 // 1. the proportion of matching stimuli to generate
 // 2. the number of stimuli to generate
 // 3. the number of trials within no repeats of a word or colour are allowed
+// It pushes the results onto the global variables "colours" and "words".
 
-var colours = words = new Array();// Global variables that addStimuli() pushes onto
+var colours = new Array();// Global variables that addStimuli() pushes onto
+var words = new Array();
 addStimuli(1, 8, noRptsWithin);
 addStimuli(0, 8, noRptsWithin);
 addStimuli(0.5, 8, noRptsWithin);
@@ -31,22 +34,27 @@ if (isPractice) {
 }
 
 var stimulusHasBeenPresented = false;
-var selection;
+var response;
 var presentationTime;
 var trialCount;
-var outputText = "Trial,Word,Colour,Selection,PresentationTime,ResponseTime,NewLine,";
+var outputText = "Trial,Word,Colour,Response,PresentationTime,ResponseTime\n";
 
 var ALL = document.getElementsByTagName("html")[0];
 var dialogArea = document.getElementById("dialogArea");
 var centeredArea = document.getElementById("centeredArea");
 var textArea = document.getElementById("textArea");
-var scoreBar = document.getElementById("scoreBar");
-var scoreCtx = scoreBar.getContext('2d');
-scoreCtx.canvas.width = 41;
-scoreCtx.canvas.height = window.innerHeight;
-var pointsBarStopId;
-var score = 0;
 var scoreArea = document.getElementById("scoreArea");
+if (gamify) {
+    var scoreBar = document.getElementById("scoreBar");
+    var scoreCtx = scoreBar.getContext('2d');
+    scoreCtx.canvas.width = 41;
+    scoreCtx.canvas.height = window.innerHeight;
+    var pointsBarStopId;
+    var score = 0;
+    scoreArea.style.display = 'block';
+} else {
+    scoreArea.style.display = 'none';
+}
 
 
 var maxPoints = 100, currPoints;
@@ -71,12 +79,13 @@ function start() {
     }
     ALL.style.cursor = "none";
     dialogArea.style.display = "none";
-	textArea.style.display = "block";
-    fixationCross();
-    setTimeout(showWord, fixationMs);
+    if (gamify) {
+        scoreArea.style.display = 'none';
+    }
+    setTimeout(runTrial, preFixationMs);
 }
 
-function afterPracticeScreen() {
+function postPracticeScreen() {
     if (gamify) {
         score = 0;
         scoreArea.textContent = "Score: " + score;
@@ -142,7 +151,7 @@ function respondToInput(inputEvent) {
     } else {
         stimulusHasBeenPresented = false;
         if(correspondingKeys.includes(inputEvent.code)){
-            selection = colourNames[correspondingKeys.indexOf(inputEvent.code)];
+            response = colourNames[correspondingKeys.indexOf(inputEvent.code)];
         } else {
             return; // Didn't select one of the designated keys
         }
@@ -155,9 +164,9 @@ function respondToInput(inputEvent) {
 	outputText += (isPractice? 0 : trialCount + 1) + "," +
                   words[trialCount] + "," +
 				  colours[trialCount] + "," +
-				  selection + "," +
+				  response + "," +
                   presentationTime + "," +
-                  inputEvent.timeStamp + ",NewLine,";
+                  inputEvent.timeStamp + "\n";
     interTrialControlFcn();
 }
 
@@ -165,7 +174,8 @@ function interTrialControlFcn() {
     trialCount++;
     if (trialCount == words.length) {
         if (isPractice) {
-            feedbackScreen(afterPracticeScreen);
+            isPractice = false;
+            feedbackScreen(postPracticeScreen);
         } else if (gamify) {
             feedbackScreen(saveData);
         } else {
@@ -190,10 +200,14 @@ function feedbackScreen(nextFunction) {
     dialogArea.style.display = 'block';
     var feedback = document.createElement('p');
     feedback.className = 'dialog';
-	if (selection == colours[trialCount-1]) {
+	if (response == colours[trialCount-1]) {
         feedback.textContent = 'Correct!';
         dialogArea.appendChild(feedback);
-        addPoints(nextFunction);
+        if (gamify) {
+            scoreArea.style.display = 'block';
+            addPoints(nextFunction);
+            return;
+        }
 	} else {
         feedback.textContent = 'Incorrect.';
         dialogArea.appendChild(feedback);
@@ -210,8 +224,8 @@ function feedbackScreen(nextFunction) {
             dialogArea.appendChild(tryAgainButton);
             return;
         }
-        setTimeout(nextFunction, feedbackMs);
 	}
+    letFeedbackLinger(nextFunction);
 }
 
 function addPoints(nextFunction) {
@@ -225,15 +239,29 @@ function addPoints(nextFunction) {
             addPointsTimeIncr
         );
     } else {
-        setTimeout(nextFunction, feedbackMs);
+        letFeedbackLinger(nextFunction);
     }
+}
+
+function letFeedbackLinger(nextFunction) {
+    setTimeout(
+        function() {
+            dialogArea.textContent = '';
+            if (gamify) {
+                scoreArea.style.display = 'none';
+            }
+            setTimeout(nextFunction, postFeedbackMs);
+        }, feedbackMs
+    );
 }
 
 function saveData() {
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (xhttp.status == 200) {
-            window.location.href = 'end.html?pID=' + pID;
+            textArea.style.display = 'none';
+            dialogArea.style.display = 'block';
+            dialogArea.textContent = 'Thank you!';
         } else if(xhttp.status == 500) {
             saveData();
         }
