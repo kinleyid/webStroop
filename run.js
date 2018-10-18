@@ -45,10 +45,8 @@ var centeredArea = document.getElementById("centeredArea");
 var textArea = document.getElementById("textArea");
 var scoreArea = document.getElementById("scoreArea");
 if (gamify) {
-    var scoreBar = document.getElementById("scoreBar");
-    var scoreCtx = scoreBar.getContext('2d');
-    scoreCtx.canvas.width = 41;
-    scoreCtx.canvas.height = window.innerHeight;
+    var pointsBarHolder = document.getElementById("pointsBarHolder");
+    var pointsBar = document.getElementById("pointsBar");
     var pointsBarStopId;
     var score = 0;
     scoreArea.style.display = 'block';
@@ -62,8 +60,6 @@ var pointsBarTimeIncr = 1000/60; // Roughly screen rate
 var addPointsTimeIncr = 1000/60; // Roughly screen rate
 
 var cIdx;
-
-window.onkeydown = respondToInput;
 
 function start() {
     trialCount = 0;
@@ -121,7 +117,7 @@ function showWord() {
     stimulusHasBeenPresented = true;
     if (gamify) {
         currPoints = maxPoints;
-        scoreBar.style.display = 'block';
+        pointsBar.style.display = 'block';
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
     presentationTime = performance.now();
@@ -136,10 +132,10 @@ function runTrial() {
 }
 
 function showPointsBar() {
-    scoreCtx.clearRect(0,0,scoreCtx.canvas.width,scoreCtx.canvas.height);
-    if (currPoints > 0) {
-        scoreCtx.fillStyle = "rgb(" + 255*(maxPoints-currPoints)/maxPoints + "," + 255*currPoints/maxPoints + ",0)";
-        scoreCtx.fillRect(20,screen.height/4+screen.height/2*(1-currPoints/maxPoints),20,currPoints/maxPoints*screen.height/2);
+    if (currPoints >= 0) {
+        pointsBar.style.backgroundColor = "rgb(" + 255*(maxPoints-currPoints)/maxPoints + "," + 255*currPoints/maxPoints + ",0)";
+        pointsBar.style.height = currPoints/maxPoints*pointsBarHolder.clientHeight + 'px';
+        pointsBar.style.top = (1 - currPoints/maxPoints)*pointsBarHolder.clientHeight + 'px';
         currPoints--;
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
@@ -157,8 +153,7 @@ function respondToInput(inputEvent) {
         }
     }
     if (gamify) {
-        scoreCtx.clearRect(0,0,scoreCtx.canvas.width,scoreCtx.canvas.height);
-        scoreBar.style.display = 'none';
+        pointsBar.style.display = 'none';
         clearTimeout(pointsBarStopId);
     }
 	outputText += (isPractice? 0 : trialCount + 1) + "," +
@@ -169,6 +164,8 @@ function respondToInput(inputEvent) {
                   inputEvent.timeStamp + "\n";
     interTrialControlFcn();
 }
+
+window.onkeydown = respondToInput;
 
 function interTrialControlFcn() {
     trialCount++;
@@ -220,7 +217,11 @@ function feedbackScreen(nextFunction) {
             dialogArea.appendChild(instructions);
             var tryAgainButton = document.createElement('button');
             tryAgainButton.textContent = 'Try again';
-            tryAgainButton.onclick = runTrial;
+            tryAgainButton.onclick = function() {
+                ALL.style.cursor = 'none'
+                dialogArea.style.display = 'none'
+                setTimeout(runTrial, postFeedbackMs)
+            };
             dialogArea.appendChild(tryAgainButton);
             return;
         }
