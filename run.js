@@ -19,7 +19,7 @@ var isPractice = true; // Set to false to eliminate practice round
 // 2. the number of stimuli to generate
 // 3. the number of trials within no repeats of a word or colour are allowed
 
-var colours = [], words = []; // Global variables that addStimuli() pushes onto
+var colours = words = new Array();// Global variables that addStimuli() pushes onto
 addStimuli(1, 8, noRptsWithin);
 addStimuli(0, 8, noRptsWithin);
 addStimuli(0.5, 8, noRptsWithin);
@@ -30,7 +30,7 @@ if (isPractice) {
     var practiceColours = ["Red", "Blue", "Yellow", "Green"];
 }
 
-var presented;
+var stimulusHasBeenPresented = false;
 var selection;
 var presentationTime;
 var trialCount;
@@ -76,7 +76,7 @@ function start() {
     setTimeout(showWord, fixationMs);
 }
 
-function afterPracticeScreen(){
+function afterPracticeScreen() {
     if (gamify) {
         score = 0;
         scoreArea.textContent = "Score: " + score;
@@ -101,15 +101,15 @@ function afterPracticeScreen(){
 	textArea.style.display = "none";
 }
 
-function fixationCross(){
+function fixationCross() {
 	textArea.style.color = "#000000";
 	textArea.textContent = "\u2022";
 }
 
-function showWord(){
+function showWord() {
 	textArea.style.color = correspondingColours[colourNames.indexOf(colours[trialCount])];
 	textArea.textContent = words[trialCount];
-    presented = true;
+    stimulusHasBeenPresented = true;
     if (gamify) {
         currPoints = maxPoints;
         scoreBar.style.display = 'block';
@@ -126,9 +126,9 @@ function runTrial() {
     setTimeout(showWord, fixationMs);
 }
 
-function showPointsBar(){
+function showPointsBar() {
     scoreCtx.clearRect(0,0,scoreCtx.canvas.width,scoreCtx.canvas.height);
-    if(currPoints > 0){
+    if (currPoints > 0) {
         scoreCtx.fillStyle = "rgb(" + 255*(maxPoints-currPoints)/maxPoints + "," + 255*currPoints/maxPoints + ",0)";
         scoreCtx.fillRect(20,screen.height/4+screen.height/2*(1-currPoints/maxPoints),20,currPoints/maxPoints*screen.height/2);
         currPoints--;
@@ -136,18 +136,18 @@ function showPointsBar(){
     }
 }
 
-function respondToInput(inputEvent){
-    if(!presented){
+function respondToInput(inputEvent) {
+    if (!stimulusHasBeenPresented) {
         return;
     } else {
-        presented = false;
+        stimulusHasBeenPresented = false;
         if(correspondingKeys.includes(inputEvent.code)){
             selection = colourNames[correspondingKeys.indexOf(inputEvent.code)];
         } else {
             return; // Didn't select one of the designated keys
         }
     }
-    if(gamify){
+    if (gamify) {
         scoreCtx.clearRect(0,0,scoreCtx.canvas.width,scoreCtx.canvas.height);
         scoreBar.style.display = 'none';
         clearTimeout(pointsBarStopId);
@@ -214,7 +214,7 @@ function feedbackScreen(nextFunction) {
 	}
 }
 
-function addPoints(nextFunction){
+function addPoints(nextFunction) {
     if (currPoints > 0) {
         currPoints--;
         scoreArea.textContent = "Score: " + score++;
@@ -229,12 +229,12 @@ function addPoints(nextFunction){
     }
 }
 
-function saveData(){
+function saveData() {
     xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (xhttp.status == 200) {
             window.location.href = 'end.html?pID=' + pID;
-        } else if(xhttp.status == 500){
+        } else if(xhttp.status == 500) {
             saveData();
         }
     };
@@ -266,7 +266,7 @@ function addStimuli(congruentPpn, nTrials, noRptsWithin) {
 	}
 }
 
-function sample(inArray,nSamples,replacement){
+function sample(inArray,nSamples,replacement) {
 	sampleArray = inArray.slice(0);
 	var i, idx, outArray = [];
 	for (i = 0; i < nSamples; i++) {
