@@ -4,8 +4,8 @@ center {
 
 p {
 	font-family: verdana;
-	margin-top: 2vh;
-	margin-bottom: 2vh;
+	margin-top: 0vh;
+	margin-bottom: 0vh;
     max-width: 75vw;
 }
 
@@ -14,15 +14,11 @@ p {
 	margin-top: 0.1vh;
 	margin-bottom: 0.1vh;
 }
+
 .dialog {
 	font-size: 4vmin;
 }
-.bigBr {
-	visibility: hidden;
-	line-height: 25vh;
-	margin-top: 0;
-	margin-bottom: 0;
-}
+
 button {
 	background-color: white;
 	margin: 1vw 1px;
