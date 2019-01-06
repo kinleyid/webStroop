@@ -54,7 +54,6 @@ if (gamify) {
     scoreArea.style.display = 'none';
 }
 
-
 var maxPoints = 100, currPoints;
 var pointsBarTimeIncr = 1000/60; // Roughly screen rate
 var addPointsTimeIncr = 1000/60; // Roughly screen rate
@@ -117,8 +116,10 @@ function showWord() {
     stimulusHasBeenPresented = true;
     if (gamify) {
         currPoints = maxPoints;
-        pointsBar.style.display = 'block';
-        pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
+        pointsBarStopId = setTimeout(function() {
+			showPointsBar();
+			pointsBar.style.display = 'block';
+		}, pointsBarTimeIncr);
     }
     presentationTime = performance.now();
 }
@@ -137,6 +138,8 @@ function showPointsBar() {
         pointsBar.style.height = currPoints/maxPoints*pointsBarHolder.clientHeight + 'px';
         pointsBar.style.top = (1 - currPoints/maxPoints)*pointsBarHolder.clientHeight + 'px';
         currPoints--;
+		currPoints = Math.max(0, currPoints);
+		currPoints = Math.max(0, currPoints);
         pointsBarStopId = setTimeout(showPointsBar,pointsBarTimeIncr);
     }
 }
